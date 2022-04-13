@@ -1,12 +1,55 @@
 ﻿#include <windows.h>
 #include <gl/gl.h>
+#include <string>
 
 #pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "winmm.lib")
+
+#define WINDOW_X 700
+#define WINDOW_Y 700
+#define MAP_X 8
+#define MAP_Y 8
 
 LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
 void EnableOpenGL(HWND hwnd, HDC*, HGLRC*);
 void DisableOpenGL(HWND, HDC, HGLRC);
+
+bool IsInMap(int x, int y) {
+	return (x >= 0) && (x < MAP_X) && (y >= 0) && (y < MAP_Y);
+}
+
+void GameBegin() {
+
+}
+
+void DrawBoard(bool isWhite) {
+	glBegin(GL_TRIANGLE_STRIP);
+	if (isWhite) glColor3d(1, 1, 1);
+	else glColor3d(0, 0, 0);
+	glVertex2d(0, 0);
+	glVertex2d(1, 0);
+	glVertex2d(0, 1);
+	glVertex2d(1, 1);
+	glEnd();
+}
+
+void Paint() {
+	glLoadIdentity();
+	glTranslated(-1, -1, 0);
+	glScaled(2.0 / MAP_X, 2.0 / MAP_Y, 0);
+
+	for (int i = 0;i < MAP_X;i++) {
+		for (int j = 0;j < MAP_Y;j++) {
+			glPushMatrix();
+			glTranslated(i, j, 0);
+
+			if(j%2==0) DrawBoard((i * MAP_Y + j) % 2);
+			else DrawBoard((i * MAP_Y + (MAP_Y - j)) % 2);
+
+
+			glPopMatrix();
+		}
+	}
+}
 
 int WINAPI WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -48,8 +91,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		512,
-		512,
+		WINDOW_X,
+		WINDOW_Y,
 		NULL,
 		NULL,
 		hInstance,
@@ -60,7 +103,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	/* enable OpenGL for the window */
 	EnableOpenGL(hwnd, &hDC, &hRC);
 
-	//PlaySoundW(L"D:\\Chrome Downloads\\sound\\YinYang_WhenImByYou.wav", NULL, SND_ASYNC);
+	GameBegin();
 
 	/* program main loop */
 	while (!bQuit)
@@ -90,18 +133,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				glClearColor(0, 0, 0, 0.0f);
 				glClear(GL_COLOR_BUFFER_BIT);
 
-				glRotated(1, 0, 0, 1);
-
-				glBegin(GL_TRIANGLES);
-				{
-					glColor3d(1, 0, 0);
-					glVertex2d(1, 0);
-					glColor3d(0, 1, 0);
-					glVertex2d(-1, 0);
-					glColor3d(0, 0, 1);
-					glVertex2d(0, 1);
-				}
-				glEnd();
+				Paint();
 
 				SwapBuffers(hDC);
 
