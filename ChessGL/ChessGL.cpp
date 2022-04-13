@@ -23,8 +23,12 @@ void GameBegin() {
 
 void DrawBoard(bool isWhite) {
 	glBegin(GL_TRIANGLE_STRIP);
-	if (isWhite) glColor3d(1, 1, 1);
-	else glColor3d(0, 0, 0);
+	int W = 0xe8a778;
+	int B = 0x6c3914;
+
+	if (isWhite) glColor3b((W/ 256 / 256) / 2, (W/256 % 256) / 2, (W %256) / 2);
+	else glColor3b((B / 256 / 256) / 2, (B / 256 % 256) / 2, (B % 256) / 2);
+
 	glVertex2d(0, 0);
 	glVertex2d(1, 0);
 	glVertex2d(0, 1);
@@ -42,8 +46,7 @@ void Paint() {
 			glPushMatrix();
 			glTranslated(i, j, 0);
 
-			if(j%2==0) DrawBoard((i * MAP_Y + j) % 2);
-			else DrawBoard((i * MAP_Y + (MAP_Y - j)) % 2);
+			DrawBoard((i + j) % 2);
 
 
 			glPopMatrix();
