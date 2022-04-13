@@ -9,16 +9,62 @@
 #define MAP_X 8
 #define MAP_Y 8
 
+using std::string;
+
 LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
 void EnableOpenGL(HWND hwnd, HDC*, HGLRC*);
 void DisableOpenGL(HWND, HDC, HGLRC);
+
+char Board[MAP_X][MAP_Y];
+
+int KQkq = 0;
+bool isTurnWhite = true;
+int turn = 0;
 
 bool IsInMap(int x, int y) {
 	return (x >= 0) && (x < MAP_X) && (y >= 0) && (y < MAP_Y);
 }
 
 void GameBegin() {
+	
+}
 
+string ConvertToString() {
+	string SOUP;
+
+	for (int i = 0;i < MAP_Y;i++) {
+		int Void = 0;
+		for (int j = 0;j < MAP_X;j++) {
+			if (Board[j][i] == ' ')
+				Void++;
+			else if (Void != 0) {
+				SOUP += std::to_string(Void);
+				Void = 0;
+			}
+			else {
+				SOUP += Board[j][i];
+			}
+
+		}
+		if(Void != 0) {
+			SOUP += std::to_string(Void);
+			Void = 0;
+		}
+		SOUP += '/';
+	}
+
+	SOUP += ' ' + isTurnWhite ? 'w' : 'b' + ' ';
+
+	SOUP += KQkq / 1000 ? 'K' : '-';
+	SOUP += (KQkq / 100)%10 ? 'Q' : '-';
+	SOUP += (KQkq / 10) % 10 ? 'k' : '-';
+	SOUP += KQkq % 10 ? 'q' : '-';
+
+	SOUP += " - - ";
+
+	SOUP += std::to_string(turn+1);
+
+	return SOUP;
 }
 
 void DrawBoard(bool isWhite) {
@@ -142,7 +188,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 				theta += 1.0f;
 			}
-			Sleep(1);
+			Sleep(5);
 		}
 	}
 
