@@ -1,11 +1,12 @@
 ﻿#include <windows.h>
-#include <gl/gl.h>
+#include <gl/GL.h>
 #include <string>
+#include "Painter.h"
 
 #pragma comment(lib, "opengl32.lib")
 
-#define WINDOW_X 700
-#define WINDOW_Y 700
+#define WINDOW_X 800
+#define WINDOW_Y 800
 #define MAP_X 8
 #define MAP_Y 8
 
@@ -19,81 +20,134 @@ char Board[MAP_X][MAP_Y];
 
 int KQkq = 0;
 bool isTurnWhite = true;
+bool isPlayWhite = true;
 int turn = 0;
+
+void ScreenToGL(HWND hwnd, int x, int y, float* ox, float* oy) {
+	RECT rct;
+	GetClientRect(hwnd, &rct);
+	*ox = x / float(rct.right) * MAP_X;
+	*oy = MAP_Y - y / float(rct.bottom) * MAP_Y;
+}
 
 bool IsInMap(int x, int y) {
 	return (x >= 0) && (x < MAP_X) && (y >= 0) && (y < MAP_Y);
 }
 
-void GameBegin() {
-	
-}
-
-string ConvertToString() {
-	string SOUP;
-
+void ResetChess() {
 	for (int i = 0;i < MAP_Y;i++) {
-		int Void = 0;
 		for (int j = 0;j < MAP_X;j++) {
-			if (Board[j][i] == ' ')
-				Void++;
-			else if (Void != 0) {
-				SOUP += std::to_string(Void);
-				Void = 0;
+			if (i == 0) {
+				switch (j) {
+				case 0:
+				case MAP_X - 1:
+					Board[j][i] = 'R';
+					break;
+				case 1:
+				case MAP_X - 2:
+					Board[j][i] = 'N';
+					break;
+				case 2:
+				case MAP_X - 3:
+					Board[j][i] = 'B';
+					break;
+				case 3:
+					Board[j][i] = 'Q';
+					break;
+				case MAP_X - 4:
+					Board[j][i] = 'K';
+					break;
+				}
 			}
-			else {
-				SOUP += Board[j][i];
+			else if (i == MAP_Y - 1) {
+				switch (j) {
+				case 0:
+				case MAP_X - 1:
+					Board[j][i] = 'r';
+					break;
+				case 1:
+				case MAP_X - 2:
+					Board[j][i] = 'n';
+					break;
+				case 2:
+				case MAP_X - 3:
+					Board[j][i] = 'b';
+					break;
+				case 3:
+					Board[j][i] = 'q';
+					break;
+				case MAP_X - 4:
+					Board[j][i] = 'k';
+					break;
+				}
 			}
-
+			else if (i == MAP_X - 2)
+				Board[j][i] = 'p';
+			else if(i == 1)
+				Board[j][i] = 'P';
+			else Board[j][i] = ' ';
 		}
-		if(Void != 0) {
-			SOUP += std::to_string(Void);
-			Void = 0;
-		}
-		SOUP += '/';
 	}
-
-	SOUP += ' ' + isTurnWhite ? 'w' : 'b' + ' ';
-
-	SOUP += KQkq / 1000 ? 'K' : '-';
-	SOUP += (KQkq / 100)%10 ? 'Q' : '-';
-	SOUP += (KQkq / 10) % 10 ? 'k' : '-';
-	SOUP += KQkq % 10 ? 'q' : '-';
-
-	SOUP += " - - ";
-
-	SOUP += std::to_string(turn+1);
-
-	return SOUP;
 }
 
-void DrawBoard(bool isWhite) {
-	glBegin(GL_TRIANGLE_STRIP);
-	int W = 0xe8a778;
-	int B = 0x6c3914;
-
-	if (isWhite) glColor3b((W/ 256 / 256) / 2, (W/256 % 256) / 2, (W %256) / 2);
-	else glColor3b((B / 256 / 256) / 2, (B / 256 % 256) / 2, (B % 256) / 2);
-
-	glVertex2d(0, 0);
-	glVertex2d(1, 0);
-	glVertex2d(0, 1);
-	glVertex2d(1, 1);
-	glEnd();
+void GameBegin() {
+	ResetChess();
 }
 
 void Paint() {
 	glLoadIdentity();
-	glTranslated(-1, -1, 0);
+	if (isPlayWhite) glTranslated(-1, -1, 0);
+	else glTranslated(1, 1, 0);
 	glScaled(2.0 / MAP_X, 2.0 / MAP_Y, 0);
-
-	for (int i = 0;i < MAP_X;i++) {
-		for (int j = 0;j < MAP_Y;j++) {
+	if (!isPlayWhite) glRotated(180, 0, 0, 1);
+	
+	for (int i = 0;i < MAP_Y;i++) {
+		for (int j = 0;j < MAP_X;j++) {
 			glPushMatrix();
-			glTranslated(i, j, 0);
-
+			if (!isPlayWhite) glTranslated(i + 1, j + 1, 0);
+			else glTranslated(i, j, 0);
+			if (!isPlayWhite) glRotated(180, 0, 0, 1);
 			DrawBoard((i + j) % 2);
 
+			switch (Board[i][j])
+			{
+			case 'P':
+				DrawPawn(true);
+				break;
+			case 'p':
+				DrawPawn(false);
+				break;
+			case 'R':
+				DrawRook(true);
+				break;
+			case 'r':
+				DrawRook(false);
+				break;
+			case 'N':
+				DrawKnight(true);
+				break;
+			case 'n':
+				DrawKnight(false);
+				break;
+			case 'B':
+				DrawBishop(true);
+				break;
+			case 'b':
+				DrawBishop(false);
+				break;
+			case 'Q':
+				DrawQueen(true);
+				break;
+			case 'q':
+				DrawQueen(false);
+				break;
+			case 'K':
+				DrawKing(true);
+				break;
+			case 'k':
+				DrawKing(false);
+				break;
+			}
 
 			glPopMatrix();
 		}
@@ -136,7 +190,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	/* create main window */
 	hwnd = CreateWindowEx(0,
 		L"GLSample",
-		L"WanichusikGL",
+		L"ChessGL",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -211,6 +265,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 		return 0;
+
+	case WM_LBUTTONDOWN:
+	{
+		POINTFLOAT pf;
+		ScreenToGL(hwnd, LOWORD(lParam), HIWORD(lParam), &pf.x, &pf.y);
+		int xx = int(pf.x);
+		int yy = int(pf.y);
+		if (!isPlayWhite) {
+			xx = MAP_X - xx - 1;
+			yy = MAP_Y - yy - 1;
+		}
+
+		Board[xx][yy] = ' ';
+	}
+		break;
 
 	case WM_KEYDOWN:
 	{
