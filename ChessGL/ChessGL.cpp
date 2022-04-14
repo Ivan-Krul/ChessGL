@@ -23,6 +23,14 @@ bool isTurnWhite = true;
 bool isPlayWhite = true;
 int turn = 0;
 
+int xx;
+int yy;
+
+struct Cursor {
+	int x1, y1, x2, y2;
+	bool isMove = false;
+} cursor;
+
 void ScreenToGL(HWND hwnd, int x, int y, float* ox, float* oy) {
 	RECT rct;
 	GetClientRect(hwnd, &rct);
@@ -32,6 +40,26 @@ void ScreenToGL(HWND hwnd, int x, int y, float* ox, float* oy) {
 
 bool IsInMap(int x, int y) {
 	return (x >= 0) && (x < MAP_X) && (y >= 0) && (y < MAP_Y);
+}
+
+void MoveCursor() {
+	if (!cursor.isMove) {
+		if (Board[xx][yy] != ' ') {
+			cursor.isMove = true;
+			cursor.x1 = xx;
+			cursor.y1 = yy;
+		}
+	}
+	else {
+		cursor.x2 = xx;
+		cursor.y2 = yy;
+
+		Board[cursor.x2][cursor.y2] = Board[cursor.x1][cursor.y1];
+		Board[cursor.x1][cursor.y1] = ' ';
+
+		cursor.isMove = false;
+	}
+
 }
 
 void ResetChess() {
@@ -92,6 +120,9 @@ void ResetChess() {
 
 void GameBegin() {
 	ResetChess();
+	turn = 0;
+	isTurnWhite = true;
+	KQkq = 0;
 }
 
 void Paint() {
@@ -107,7 +138,8 @@ void Paint() {
 			if (!isPlayWhite) glTranslated(i + 1, j + 1, 0);
 			else glTranslated(i, j, 0);
 			if (!isPlayWhite) glRotated(180, 0, 0, 1);
-			DrawBoard((i + j) % 2);
+			if (j == yy && i == xx) DrawSelectedBoard((i + j) % 2);
+			else DrawBoard((i + j) % 2);
 
 			switch (Board[i][j])
 			{
@@ -238,6 +270,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 				Paint();
 
+				glPointSize(50);
+				glBegin(GL_POINTS);
+				if(cursor.isMove)glColor3d(0, 0, 0);
+				else glColor3d(0, 1, 0);
+				glVertex2d(xx, yy);
+				glEnd();
+
 				SwapBuffers(hDC);
 
 				theta += 1.0f;
@@ -270,14 +309,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		POINTFLOAT pf;
 		ScreenToGL(hwnd, LOWORD(lParam), HIWORD(lParam), &pf.x, &pf.y);
-		int xx = int(pf.x);
-		int yy = int(pf.y);
 		if (!isPlayWhite) {
 			xx = MAP_X - xx - 1;
 			yy = MAP_Y - yy - 1;
+
 		}
 
-		Board[xx][yy] = ' ';
+		xx = int(pf.x);
+		yy = int(pf.y);
+
+		void MoveCursor();
+
+		//Board[xx][yy] = ' ';
 	}
 		break;
 
