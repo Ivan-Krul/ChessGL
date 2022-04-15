@@ -5,8 +5,8 @@
 
 #pragma comment(lib, "opengl32.lib")
 
-#define WINDOW_X 800
-#define WINDOW_Y 800
+#define WINDOW_X 700
+#define WINDOW_Y 700
 #define MAP_X 8
 #define MAP_Y 8
 
@@ -38,28 +38,53 @@ void ScreenToGL(HWND hwnd, int x, int y, float* ox, float* oy) {
 	*oy = MAP_Y - y / float(rct.bottom) * MAP_Y;
 }
 
+bool IsUpper(char cha) {
+	if (65 <= int(cha) && int(cha) < 90)
+		return true;
+	else return false;
+}
+
 bool IsInMap(int x, int y) {
 	return (x >= 0) && (x < MAP_X) && (y >= 0) && (y < MAP_Y);
 }
 
 void MoveCursor() {
-	if (!cursor.isMove) {
-		if (Board[xx][yy] != ' ') {
-			cursor.isMove = true;
-			cursor.x1 = xx;
-			cursor.y1 = yy;
+	if (IsInMap(xx, yy)) {
+		if (!cursor.isMove) {
+			if (Board[xx][yy] != ' ' && !(isTurnWhite ^ IsUpper(Board[xx][yy]))) {
+				cursor.isMove = true;
+				cursor.x1 = xx;
+				cursor.y1 = yy;
+			}
+		}
+		else {
+			if (cursor.x1 == xx && cursor.y1 == yy) cursor.isMove = false;
+			else if (!(isTurnWhite ^ IsUpper(Board[xx][yy]))) {
+				cursor.x1 = xx;
+				cursor.y1 = yy;
+			}
+			else{
+				cursor.x2 = xx;
+				cursor.y2 = yy;
+				
+				if (Board[cursor.x2][cursor.y2] == 'K') {
+
+				}
+				else if (Board[cursor.x2][cursor.y2] == 'k') {
+
+				}
+
+				Board[cursor.x2][cursor.y2] = Board[cursor.x1][cursor.y1];
+				Board[cursor.x1][cursor.y1] = ' ';
+				
+				cursor.isMove = false;
+				isTurnWhite = !isTurnWhite;
+				
+				
+			}
+
 		}
 	}
-	else {
-		cursor.x2 = xx;
-		cursor.y2 = yy;
-
-		Board[cursor.x2][cursor.y2] = Board[cursor.x1][cursor.y1];
-		Board[cursor.x1][cursor.y1] = ' ';
-
-		cursor.isMove = false;
-	}
-
 }
 
 void ResetChess() {
@@ -272,7 +297,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 				glPointSize(50);
 				glBegin(GL_POINTS);
-				if(cursor.isMove)glColor3d(0, 0, 0);
+				if(cursor.isMove)glColor3d(0, 0, 1);
 				else glColor3d(0, 1, 0);
 				glVertex2d(xx, yy);
 				glEnd();
@@ -309,16 +334,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		POINTFLOAT pf;
 		ScreenToGL(hwnd, LOWORD(lParam), HIWORD(lParam), &pf.x, &pf.y);
+		xx = int(pf.x);
+		yy = int(pf.y);
+
 		if (!isPlayWhite) {
 			xx = MAP_X - xx - 1;
 			yy = MAP_Y - yy - 1;
 
 		}
 
-		xx = int(pf.x);
-		yy = int(pf.y);
-
-		void MoveCursor();
+		MoveCursor();
 
 		//Board[xx][yy] = ' ';
 	}
