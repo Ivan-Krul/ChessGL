@@ -18,7 +18,8 @@ void DisableOpenGL(HWND, HDC, HGLRC);
 
 char Board[MAP_X][MAP_Y];
 
-int KQkq = 0;
+unsigned short PawnBlitz = 0b0000000000000000; // 10101000 00000000 // 1 - pawn made a long length first move, 0 - any else, or nothing movement by the pawn
+unsigned char Rocking = 0b11111111; // 11111111 // 11 - can made rocking on any zone, if king move, white lost access of rocking of all variation, but if one of the rook will move, then one of sizes will lost access of rocking
 bool isTurnWhite = true;
 bool isPlayWhite = true;
 int turn = 0;
@@ -38,20 +39,26 @@ void ScreenToGL(HWND hwnd, int x, int y, float* ox, float* oy) {
 	*oy = MAP_Y - y / float(rct.bottom) * MAP_Y;
 }
 
-bool IsUpper(char cha) {
-	if (65 <= int(cha) && int(cha) < 90)
-		return true;
-	else return false;
+int IsUpper(char cha) {
+	if (65 <= int(cha) && int(cha) <= 90) // A, B, C, ...
+		return 2;
+	else if (97 <= int(cha) && int(cha) <= 122) // a, b, c, ...
+		return 1;
+	else return 0;
 }
 
 bool IsInMap(int x, int y) {
 	return (x >= 0) && (x < MAP_X) && (y >= 0) && (y < MAP_Y);
 }
 
+bool IsYourTurn(int x, int y) {
+	return (isTurnWhite && IsUpper(Board[x][y]) == 2) || (!isTurnWhite && IsUpper(Board[x][y]) == 1);
+}
+
 void MoveCursor() {
 	if (IsInMap(xx, yy)) {
 		if (!cursor.isMove) {
-			if (Board[xx][yy] != ' ' && !(isTurnWhite ^ IsUpper(Board[xx][yy]))) {
+			if (Board[xx][yy] != ' ' && IsYourTurn(xx,yy)) {
 				cursor.isMove = true;
 				cursor.x1 = xx;
 				cursor.y1 = yy;
@@ -59,7 +66,7 @@ void MoveCursor() {
 		}
 		else {
 			if (cursor.x1 == xx && cursor.y1 == yy) cursor.isMove = false;
-			else if (!(isTurnWhite ^ IsUpper(Board[xx][yy]))) {
+			else if (IsYourTurn(xx, yy)){
 				cursor.x1 = xx;
 				cursor.y1 = yy;
 			}
@@ -67,20 +74,32 @@ void MoveCursor() {
 				cursor.x2 = xx;
 				cursor.y2 = yy;
 				
-				if (Board[cursor.x2][cursor.y2] == 'K') {
-
+				if (Board[cursor.x1][cursor.y1] == 'K') {
+					if (Rocking / 0b11110000 != 0b0000) {
+						if ((Rocking / 0b11110000) % 0b1100 != 0b00)Rocking -= 0b00110000;
+						if ((Rocking / 0b11110000) / 0b1100 != 0b00)Rocking -= 0b11000000;
+					}
 				}
-				else if (Board[cursor.x2][cursor.y2] == 'k') {
+				else if (Board[cursor.x1][cursor.y1] == 'k') {
+					if (Rocking % 0b11110000 != 0b0000) {
+						if ((Rocking % 0b11110000) % 0b1100 != 0b00)Rocking -= 0b00000011;
+						if ((Rocking % 0b11110000) / 0b1100 != 0b00)Rocking -= 0b00001100;
+					}
+				}
+
+				if (Board[cursor.x1][cursor.y1] == 'P' && cursor.y1 + 2 == cursor.y2) {
+					
+				}
+				else if (Board[cursor.x1][cursor.y1] == 'p' && cursor.y1 - 2 == cursor.y2) {
 
 				}
 
 				Board[cursor.x2][cursor.y2] = Board[cursor.x1][cursor.y1];
 				Board[cursor.x1][cursor.y1] = ' ';
 				
+				if(!isTurnWhite) turn++;
 				cursor.isMove = false;
 				isTurnWhite = !isTurnWhite;
-				
-				
 			}
 
 		}
@@ -147,7 +166,8 @@ void GameBegin() {
 	ResetChess();
 	turn = 0;
 	isTurnWhite = true;
-	KQkq = 0;
+	PawnBlitz = 0b0000000000000000;
+	Rocking = 0b11111111;
 }
 
 void Paint() {
@@ -294,6 +314,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				glClear(GL_COLOR_BUFFER_BIT);
 
 				Paint();
+
+				std::wstring title = L"ChessGL turn - " + std::to_wstring(turn + 1) + L" " + (isTurnWhite ? L"white" : L"black");
+				SetWindowText(hwnd, title.c_str());
 
 				glPointSize(50);
 				glBegin(GL_POINTS);
