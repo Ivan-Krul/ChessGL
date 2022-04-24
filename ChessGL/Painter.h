@@ -1,5 +1,6 @@
 #pragma once
 #include <gl/GL.h>
+#include <vector>
 
 #pragma comment(lib, "opengl32.lib")
 
@@ -100,8 +101,8 @@ void DrawBoard(bool isWhite) {
 	int W = colorBoardW;
 	int B = colorBoardB;
 
-	if (isWhite) glColor3b((W / 256 / 256) / 2, (W / 256 % 256) / 2, (W % 256) / 2);
-	else glColor3b((B / 256 / 256) / 2, (B / 256 % 256) / 2, (B % 256) / 2);
+	if (isWhite)	glColor3b((W / 256 / 256) / 2, (W / 256 % 256) / 2, (W % 256) / 2);
+	else			glColor3b((B / 256 / 256) / 2, (B / 256 % 256) / 2, (B % 256) / 2);
 
 	glVertex2d(0, 0);
 	glVertex2d(1, 0);
@@ -115,8 +116,8 @@ void DrawSelectedBoard(bool isWhite) {
 	int W = colorBoardW;
 	int B = colorBoardB;
 
-	if (isWhite) glColor3b((W / 256 / 256) / 2, (W / 256 % 256 - 120) / 2, (W % 256 - 120) / 2);
-	else glColor3b((W / 256 / 256) / 2, (B / 256 % 256 - 120) / 2, (B % 256 - 120) / 2);
+	if (isWhite)	glColor3b((W / 256 / 256) / 2, (W / 256 % 256 - 120) / 2, (W % 256 - 120) / 2);
+	else			glColor3b((B / 256 / 256) / 2, (B / 256 % 256 - 120) / 2, (B % 256 - 120) / 2);
 
 	glVertex2d(0, 0);
 	glVertex2d(1, 0);
@@ -124,3 +125,19 @@ void DrawSelectedBoard(bool isWhite) {
 	glVertex2d(1, 1);
 	glEnd();
 }
+
+void DrawTargetedBoard(bool isWhite) {
+	glBegin(GL_TRIANGLE_STRIP);
+	int W = colorBoardW;
+	int B = colorBoardB;
+
+	if (isWhite)	glColor3b((W / 256 / 256 - 120) / 2, (W / 256 % 256) / 2, (W % 256) / 2);
+	else			glColor3b((B / 256 / 256 - 120) / 2, (B / 256 % 256) / 2, (B % 256) / 2);
+
+	glVertex2d(0, 0);
+	glVertex2d(1, 0);
+	glVertex2d(0, 1);
+	glVertex2d(1, 1);
+	glEnd();
+}
+
